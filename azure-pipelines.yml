@@ -8,9 +8,30 @@ pool:
 
 steps:
   - checkout: self
+    clean: true
 
   - task: Maven@4
+    displayName: "Build & test (Maven)"
     inputs:
-      mavenPomFile: pom.xml
-      goals: clean package
-      jdkVersionOption: '17'
+      mavenPomFile: "pom.xml"
+      goals: "clean test package"
+      options: "-DskipTests=false"
+      publishJUnitResults: true
+      testResultsFiles: "**/surefire-reports/TEST-*.xml"
+      javaHomeOption: "JDKVersion"
+      jdkVersionOption: "17"
+      mavenVersionOption: "Default"
+
+  - task: CopyFiles@2
+    displayName: "Collect JAR(s)"
+    inputs:
+      SourceFolder: "$(System.DefaultWorkingDirectory)"
+      Contents: "**/target/*.jar"
+      TargetFolder: "$(Build.ArtifactStagingDirectory)"
+
+  - task: PublishPipelineArtifact@1
+    displayName: "Publish deployable JAR artifact"
+    inputs:
+      targetPath: "$(Build.ArtifactStagingDirectory)"
+      artifact: "jar"
+      publishLocation: "pipeline"
