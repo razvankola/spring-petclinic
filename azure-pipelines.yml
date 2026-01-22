@@ -21,6 +21,26 @@ steps:
       mvn -B clean test package
     displayName: Build with system Java/Maven
 
+  - script: | 
+      set -e 
+      echo "Finding built JAR..." 
+      JAR=$(find "$(System.DefaultWorkingDirectory)" -type f -path "*/target/*.jar" | grep -v "original" | head -n 1) 
+      echo "JAR=$JAR" 
+      if [ -z "$JAR" ]; then 
+      echo "ERROR: No JAR found under target/" 
+      exit 1 
+      fi
+
+      echo "Deploying to /opt/petclinic/app.jar" 
+      sudo mkdir -p /opt/petclinic 
+      sudo cp "$JAR" /opt/petclinic/app.jar 
+      sudo chmod 0644 /opt/petclinic/app.jar 
+      echo "Restarting service" 
+      sudo systemctl daemon-reload 
+      sudo systemctl restart petclinic-jar 
+      sudo systemctl --no-pager --full status petclinic-jar | sed -n '1,20p' 
+    displayName: "Deploy JAR to VM and restart service"
+
   - task: CopyFiles@2
     displayName: "Collect JAR(s)"
     inputs:
