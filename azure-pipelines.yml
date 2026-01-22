@@ -10,17 +10,16 @@ steps:
   - checkout: self
     clean: true
 
-  - task: Maven@4
-    displayName: "Build & test (Maven)"
-    inputs:
-      mavenPomFile: "pom.xml"
-      goals: "clean test package"
-      options: "-DskipTests=false"
-      publishJUnitResults: true
-      testResultsFiles: "**/surefire-reports/TEST-*.xml"
-      javaHomeOption: "JDKVersion"
-      jdkVersionOption: "17"
-      mavenVersionOption: "Default"
+  - script: |
+      set -e
+      echo "=== JAVA ==="
+      java --version
+      echo "JAVA_HOME=$JAVA_HOME"
+      echo "=== Maven"
+      mvn --version
+      echo "=== Build"
+      mvn -B clean test package
+    displayName: Build with system Java/Maven
 
   - task: CopyFiles@2
     displayName: "Collect JAR(s)"
